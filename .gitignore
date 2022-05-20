@@ -1,0 +1,5 @@
+*.stl
+*.STL
+/__pycache__
+/datasets
+/results
