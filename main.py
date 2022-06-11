@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 dir_names = [
     # 'CBCT_2018_stl_100',
     # 'CBCT_2019_stl_99',
-    'CBCT_2020_stl_100'
+    # 'CBCT_2020_stl_100',
+    # 'PMCT_2018_stl_58',
+    'PMCT_2019_stl_167',
 ]
 
 camera_pose_set = {
@@ -70,6 +72,14 @@ camera_pose_set = {
             [0.0, np.sin(np.pi/2.0), np.cos(np.pi/2.0), 70.0],
             [0.0, 0.0, 0.0, 1.0]
         ])
+    ],
+    'PMCT_2019_stl_167': [
+        np.array([
+            [np.cos(np.pi/2.0), -np.sin(np.pi/2.0) * np.cos(np.pi/2.0), np.sin(np.pi/2.0) * np.sin(np.pi/2.0), 200.0],
+            [np.sin(np.pi/2.0), np.cos(np.pi/2.0) * np.cos(np.pi/2.0),  -np.sin(np.pi/2.0) * np.cos(np.pi/2.0), -90.0],
+            [0.0, np.sin(np.pi/2.0), np.cos(np.pi/2.0), -100.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ])
     ]
 }
 
@@ -80,29 +90,78 @@ for dir_name in dir_names:
         for file in files:
             file_path = os.path.join(root, file)
 
-            if 'CR' in file_path:
-                camera_poses = camera_pose_set[dir_name]
-                for i, camera_pose in enumerate(camera_poses):
-                    fuze_trimesh = trimesh.load(file_path)
+            if ('CBCT' in file_path) and ('CR' in file_path):
+                if (os.path.isdir(f'./results/{dir_name}/{root.strip(dir_path)}')):
+                    print('Exist!!')
+                    continue
+                
+                try:
+                    camera_poses = camera_pose_set[dir_name]
+                    for i, camera_pose in enumerate(camera_poses):
+                        fuze_trimesh = trimesh.load(file_path)
 
-                    mesh = pyrender.Mesh.from_trimesh(fuze_trimesh)
-                    scene = pyrender.Scene()
-                    scene.add(mesh)
-                    camera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.0)
+                        mesh = pyrender.Mesh.from_trimesh(fuze_trimesh)
+                        scene = pyrender.Scene()
+                        scene.add(mesh)
+                        camera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.0)
 
-                    scene.add(camera, pose=camera_pose)
+                        scene.add(camera, pose=camera_pose)
 
-                    direc_l = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
-                    spot_l = pyrender.SpotLight(color=np.ones(3), intensity=20.0,
-                                        innerConeAngle=np.pi/16, outerConeAngle=np.pi/6)
+                        direc_l = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
+                        spot_l = pyrender.SpotLight(color=np.ones(3), intensity=20.0,
+                                            innerConeAngle=np.pi/16, outerConeAngle=np.pi/6)
 
-                    direc_l_node = scene.add(direc_l, pose=camera_pose)
-                    spot_l_node = scene.add(spot_l, pose=camera_pose)
+                        direc_l_node = scene.add(direc_l, pose=camera_pose)
+                        spot_l_node = scene.add(spot_l, pose=camera_pose)
 
-                    r = pyrender.OffscreenRenderer(800, 800)
-                    color, depth = r.render(scene)
+                        r = pyrender.OffscreenRenderer(800, 800)
+                        color, depth = r.render(scene)
 
-                    os.makedirs(f'./results/{dir_name}/{root.strip(dir_path)}', exist_ok=True)
-                    plt.imsave(f'./results/{dir_name}/{root.strip(dir_path)}/000{i}.png', color)
+                        os.makedirs(f'./results/{dir_name}/{root.strip(dir_path)}', exist_ok=True)
+                        plt.imsave(f'./results/{dir_name}/{root.strip(dir_path)}/000{i}.png', color)
 
-                    print(f"./results/{dir_name}/{root.strip(dir_path)}/000{i}.png saved!")
+                        print(f"./results/{dir_name}/{root.strip(dir_path)}/000{i}.png saved!")
+                    
+                except Exception as e:
+                    print(f'error {e}')
+                    continue
+                finally:
+                    continue
+
+            if ('PMCT' in file_path) and ('skull' in file_path):    
+                if (os.path.isdir(f'./results/{dir_name}/{root.strip(dir_path)}')):
+                    print('Exist!!')
+                    continue
+                
+                try:
+                    camera_poses = camera_pose_set[dir_name]
+                    for i, camera_pose in enumerate(camera_poses):
+                        fuze_trimesh = trimesh.load(file_path)
+
+                        mesh = pyrender.Mesh.from_trimesh(fuze_trimesh)
+                        scene = pyrender.Scene()
+                        scene.add(mesh)
+                        camera = pyrender.PerspectiveCamera(yfov=np.pi / 3.0, aspectRatio=1.0)
+
+                        scene.add(camera, pose=camera_pose)
+
+                        direc_l = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
+                        spot_l = pyrender.SpotLight(color=np.ones(3), intensity=20.0,
+                                            innerConeAngle=np.pi/16, outerConeAngle=np.pi/6)
+
+                        direc_l_node = scene.add(direc_l, pose=camera_pose)
+                        spot_l_node = scene.add(spot_l, pose=camera_pose)
+
+                        r = pyrender.OffscreenRenderer(800, 800)
+                        color, depth = r.render(scene)
+
+                        os.makedirs(f'./results/{dir_name}/{root.strip(dir_path)}', exist_ok=True)
+                        plt.imsave(f'./results/{dir_name}/{root.strip(dir_path)}/000{i}.png', color)
+
+                        print(f"./results/{dir_name}/{root.strip(dir_path)}/000{i}.png saved!")
+                    
+                except Exception as e:
+                    print(f'error {e}')
+                    continue
+                finally:
+                    continue
